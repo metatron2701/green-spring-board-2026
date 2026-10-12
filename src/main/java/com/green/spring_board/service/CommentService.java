@@ -6,11 +6,13 @@ import com.green.spring_board.entity.Board;
 import com.green.spring_board.entity.Comment;
 import com.green.spring_board.entity.User;
 import com.green.spring_board.exceptions.AuthorizationFailureException;
+import com.green.spring_board.exceptions.InvalidStateException;
 import com.green.spring_board.exceptions.ResourceNotFoundException;
 import com.green.spring_board.repository.BoardRepository;
 import com.green.spring_board.repository.CommentRepository;
 import com.green.spring_board.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -26,9 +28,11 @@ public class CommentService {
 
     public void createComment(
             CommentCreateRequest commentCreateRequest,
-            int userId,
             int boardId
     ) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        int userId = userRepository.findByUsername(username).getId();
+
         Optional<User> userOptional = userRepository.findById(userId);
         Optional<Board> boardOptional = boardRepository.findById(boardId);
 
@@ -72,7 +76,10 @@ public class CommentService {
         return commentResponses;
     }
 
-    public void deleteComment(int commentId, int userId) {
+    public void deleteComment(int commentId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        int userId = userRepository.findByUsername(username).getId();
+
         Optional<Comment> commentOptional = commentRepository.findById(commentId);
         if (commentOptional.isEmpty()) {
             throw new ResourceNotFoundException("Comment not found");
@@ -89,9 +96,11 @@ public class CommentService {
 
     public void updateComment(
             CommentCreateRequest commentCreateRequest,
-            int commentId,
-            int userId
+            int commentId
     ) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        int userId = userRepository.findByUsername(username).getId();
+
         Optional<Comment> commentOptional = commentRepository.findById(commentId);
         if (commentOptional.isEmpty()) {
             throw new ResourceNotFoundException("Comment not found");

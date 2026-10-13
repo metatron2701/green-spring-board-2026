@@ -7,12 +7,14 @@ import com.green.spring_board.dto.RefreshRequest;
 import com.green.spring_board.dto.RefreshResponse;
 import com.green.spring_board.dto.SignupRequest;
 import com.green.spring_board.dto.UserUpdateRequest;
+import com.green.spring_board.entity.AccessTokenBlacklist;
 import com.green.spring_board.entity.RefreshToken;
 import com.green.spring_board.entity.User;
 import com.green.spring_board.exceptions.ResourceConflictException;
 import com.green.spring_board.exceptions.ResourceNotFoundException;
 import com.green.spring_board.exceptions.UnauthenticatedException;
 import com.green.spring_board.global.UserState;
+import com.green.spring_board.repository.AccessTokenBlacklistRepository;
 import com.green.spring_board.repository.RefreshTokenRepository;
 import com.green.spring_board.repository.UserRepository;
 import com.green.spring_board.security.JwtTokenProvider;
@@ -39,6 +41,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
+    private final AccessTokenBlacklistRepository accessTokenBlacklistRepository;
 
     public void signup(SignupRequest signupRequest) {
         // 아이디가 사용 중인지 확인
@@ -91,9 +94,7 @@ public class UserService {
         refreshTokenRepository.deleteByUserId(user.getId());
 
         Date expirationDate = tokenProvider.getExpiration(refreshToken);
-        LocalDateTime expirationDateTime = expirationDate.toInstant().atZone(
-                ZoneId.systemDefault()
-        ).toLocalDateTime();
+        LocalDateTime expirationDateTime = expirationDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 
         RefreshToken refresh = new RefreshToken();
         refresh.setUser(user);
@@ -103,6 +104,22 @@ public class UserService {
 
         // 3. 로그인 성공
         return new LoginResponse(accessToken, refreshToken);
+    }
+
+    @Transactional
+    public void logout(String accessToken) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username);
+        refreshTokenRepository.deleteByUserId(user.getId());
+
+
+        Date expirationDate = tokenProvider.getExpiration(accessToken);
+        LocalDateTime convertedDateTime = expirationDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+
+        AccessTokenBlacklist accessTokenBlacklist = new AccessTokenBlacklist();
+        accessTokenBlacklist.setToken(accessToken);
+        accessTokenBlacklist.setExpirationDatetime(convertedDateTime);
+        accessTokenBlacklistRepository.save(accessTokenBlacklist);
     }
 
     public RefreshResponse refresh(@Valid RefreshRequest refreshRequest) {

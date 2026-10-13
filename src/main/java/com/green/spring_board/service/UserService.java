@@ -1,11 +1,17 @@
 package com.green.spring_board.service;
 
-import com.green.spring_board.dto.*;
+import com.green.spring_board.dto.LoginRequest;
+import com.green.spring_board.dto.LoginResponse;
+import com.green.spring_board.dto.MyInfoResponse;
+import com.green.spring_board.dto.SignupRequest;
+import com.green.spring_board.dto.UserUpdateRequest;
+import com.green.spring_board.entity.RefreshToken;
 import com.green.spring_board.entity.User;
 import com.green.spring_board.exceptions.ResourceConflictException;
 import com.green.spring_board.exceptions.ResourceNotFoundException;
 import com.green.spring_board.exceptions.UnauthenticatedException;
 import com.green.spring_board.global.UserState;
+import com.green.spring_board.repository.RefreshTokenRepository;
 import com.green.spring_board.repository.UserRepository;
 import com.green.spring_board.security.JwtTokenProvider;
 import lombok.AllArgsConstructor;
@@ -13,16 +19,20 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.Optional;
 
 @Service
 @AllArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
@@ -51,6 +61,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
     public LoginResponse login(LoginRequest loginRequest) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
@@ -72,8 +83,23 @@ public class UserService {
 
         // 액세스 토큰 발급
         String accessToken = tokenProvider.generateAccessToken(user.getUsername());
+        String refreshToken = tokenProvider.generateRefreshToken(user.getUsername());
+
+        refreshTokenRepository.deleteByUserId(user.getId());
+
+        Date expirationDate = tokenProvider.getExpiration(refreshToken);
+        LocalDateTime expirationDateTime = expirationDate.toInstant().atZone(
+                ZoneId.systemDefault()
+        ).toLocalDateTime();
+
+        RefreshToken refresh = new RefreshToken();
+        refresh.setUser(user);
+        refresh.setToken(refreshToken);
+        refresh.setExpirationDatetime(expirationDateTime);
+        refreshTokenRepository.save(refresh);
+
         // 3. 로그인 성공
-        return new LoginResponse(accessToken);
+        return new LoginResponse(accessToken, refreshToken);
     }
 
     public MyInfoResponse getUserInfo(){

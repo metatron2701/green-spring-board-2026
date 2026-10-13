@@ -6,7 +6,6 @@ import com.green.spring_board.entity.Board;
 import com.green.spring_board.entity.Comment;
 import com.green.spring_board.entity.User;
 import com.green.spring_board.exceptions.AuthorizationFailureException;
-import com.green.spring_board.exceptions.InvalidStateException;
 import com.green.spring_board.exceptions.ResourceNotFoundException;
 import com.green.spring_board.repository.BoardRepository;
 import com.green.spring_board.repository.CommentRepository;

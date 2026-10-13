@@ -4,6 +4,8 @@ import com.green.spring_board.dto.ApiResponse;
 import com.green.spring_board.dto.LoginRequest;
 import com.green.spring_board.dto.LoginResponse;
 import com.green.spring_board.dto.MyInfoResponse;
+import com.green.spring_board.dto.RefreshRequest;
+import com.green.spring_board.dto.RefreshResponse;
 import com.green.spring_board.dto.SignupRequest;
 import com.green.spring_board.dto.UserUpdateRequest;
 import com.green.spring_board.service.UserService;
@@ -46,6 +48,14 @@ public class UserController {
     public ResponseEntity<ApiResponse<Void>> logout(
     ){
         return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<RefreshResponse>> refresh(
+            @Valid @RequestBody RefreshRequest refreshRequest
+    ) {
+        RefreshResponse response = userService.refresh(refreshRequest);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @GetMapping("/me")

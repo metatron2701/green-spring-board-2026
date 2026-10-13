@@ -3,6 +3,8 @@ package com.green.spring_board.service;
 import com.green.spring_board.dto.LoginRequest;
 import com.green.spring_board.dto.LoginResponse;
 import com.green.spring_board.dto.MyInfoResponse;
+import com.green.spring_board.dto.RefreshRequest;
+import com.green.spring_board.dto.RefreshResponse;
 import com.green.spring_board.dto.SignupRequest;
 import com.green.spring_board.dto.UserUpdateRequest;
 import com.green.spring_board.entity.RefreshToken;
@@ -14,6 +16,7 @@ import com.green.spring_board.global.UserState;
 import com.green.spring_board.repository.RefreshTokenRepository;
 import com.green.spring_board.repository.UserRepository;
 import com.green.spring_board.security.JwtTokenProvider;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -100,6 +103,32 @@ public class UserService {
 
         // 3. 로그인 성공
         return new LoginResponse(accessToken, refreshToken);
+    }
+
+    public RefreshResponse refresh(@Valid RefreshRequest refreshRequest) {
+        String userRefreshToken = refreshRequest.getRefreshToken();
+        if (!tokenProvider.validateRefreshToken(userRefreshToken)) {
+            throw new UnauthenticatedException("만료되어거나 유효하지 않은 리플레시 토큰입니다.");
+        }
+
+        Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findByToken(userRefreshToken);
+        if (optionalRefreshToken.isEmpty()){
+            throw new UnauthenticatedException("유효하지 않은 리플레시 토큰입니다.");
+        }
+
+        if (optionalRefreshToken.get().getExpirationDatetime().isBefore(LocalDateTime.now())) {
+            throw new UnauthenticatedException("만료된 리플레시 토큰입니다.");
+        }
+
+        String username = tokenProvider.getUsernameFromToken(userRefreshToken);
+        User user = userRepository.findByUsername(username);
+        if (user == null || user.getState() == UserState.QUITTED) {
+            throw new UnauthenticatedException("유효하지 않은 유저입니다.");
+        }
+
+        String accessToken = tokenProvider.generateAccessToken(username);
+
+        return new RefreshResponse(accessToken);
     }
 
     public MyInfoResponse getUserInfo(){

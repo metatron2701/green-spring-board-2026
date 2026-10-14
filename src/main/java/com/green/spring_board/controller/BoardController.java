@@ -1,24 +1,12 @@
 package com.green.spring_board.controller;
 
-import com.green.spring_board.dto.ApiResponse;
-import com.green.spring_board.dto.BoardCreateRequest;
-import com.green.spring_board.dto.BoardResponse;
-import com.green.spring_board.dto.BoardUpdateRequest;
-import com.green.spring_board.dto.LikeDetailResponse;
+import com.green.spring_board.dto.*;
 import com.green.spring_board.service.BoardService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
@@ -54,8 +42,7 @@ public class BoardController {
     }
 
     @GetMapping("/my-boards")
-    public ResponseEntity<ApiResponse<List<BoardResponse>>> getMyBoards(
-    ){
+    public ResponseEntity<ApiResponse<List<BoardResponse>>> getMyBoards(){
         List<BoardResponse> response = boardService.getMyBoards();
 
         return ResponseEntity.ok(
@@ -98,14 +85,25 @@ public class BoardController {
     ){
         boardService.pressLike(id);
         return ResponseEntity.ok(ApiResponse.ok());
+
+        // 내가 이 게시글 좋아요 눌렀는지
     }
 
     @GetMapping("/like/{id}")
     public ResponseEntity<ApiResponse<LikeDetailResponse>> viewLikeDetails(
             @PathVariable int id
     ){
+
         // 이 게시글에 좋아요 누른 유저들의 유저명
         LikeDetailResponse response = boardService.getLikeDetail(id);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<BoardResponse>>> searchPosts(
+            @RequestParam String keyword
+    ) {
+        List<BoardResponse> response = boardService.search(keyword);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }

@@ -54,7 +54,7 @@ public class SecurityConfig {
                             .accessDeniedHandler(accessDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // 로그인 회원가입 허용
+                        // 로그인 회원가입 토큰재발급 허용
                         .requestMatchers(
                                 "/api/user/signup",
                                 "/api/user/login",

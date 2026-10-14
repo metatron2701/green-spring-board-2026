@@ -36,9 +36,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 토큰 위/변조 여부 검사
             if(tokenProvider.validateAccessToken(token)) {
-                Optional<AccessTokenBlacklist> optionalAccessTokenBlacklist = accessTokenBlacklistRepository.findByToken(token);
-                if (optionalAccessTokenBlacklist.isPresent()) {
-                    authenticationEntryPoint.commence(request, response, new BadCredentialsException("무효화된 엑세스 토큰입니다."));
+                Optional<AccessTokenBlacklist> optionalATB = accessTokenBlacklistRepository.findByToken(token);
+                if (optionalATB.isPresent()){
+                    authenticationEntryPoint.commence(
+                            request,
+                            response,
+                            new BadCredentialsException("무효화된 액세스 토큰입니다.")
+                    );
                     return;
                 }
 

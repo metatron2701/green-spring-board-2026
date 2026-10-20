@@ -61,7 +61,7 @@ public class BoardService {
                             board.getContent(),
                             board.getHits(),
                             board.getLikeCount(),
-                            (userId == -1) ? false : likeRepository.existsByUserIdAndBoardId(userId, board.getId()),
+                            userId != -1 && likeRepository.existsByUserIdAndBoardId(userId, board.getId()),
                             board.getUser().getId(),
                             board.getUser().getNickname(),
                             board.getCreatedDatetime(),
@@ -75,7 +75,7 @@ public class BoardService {
     }
 
     // 상세 조회
-    @Transactional(readOnly = true)
+    @Transactional
     public BoardResponse getBoard(int id) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         int userId = userRepository.findByUsername(username).getId();
@@ -102,7 +102,7 @@ public class BoardService {
                 board.getContent(),
                 board.getHits(),
                 board.getLikeCount(),
-                (userId == -1) ? false : likeRepository.existsByUserIdAndBoardId(userId, board.getId()),
+                userId != -1 && likeRepository.existsByUserIdAndBoardId(userId, board.getId()),
                 board.getUser().getId(),
                 board.getUser().getNickname(),
                 board.getCreatedDatetime(),

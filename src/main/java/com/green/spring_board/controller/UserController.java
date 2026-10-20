@@ -1,8 +1,6 @@
 package com.green.spring_board.controller;
 
 import com.green.spring_board.dto.*;
-import com.green.spring_board.repository.UserRepository;
-import com.green.spring_board.service.BoardService;
 import com.green.spring_board.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,8 +16,6 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class UserController {
     private final UserService userService;
-    private final UserRepository userRepository;
-    private final BoardService boardService;
 
     @Operation(summary = "회원가입 API", description = "회원가입을 할 때 씀")
     @PostMapping("/signup")

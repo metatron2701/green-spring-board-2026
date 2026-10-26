@@ -13,4 +13,3 @@ public interface AccessTokenBlacklistRepository
     // expirationDatetime이 매개변수의 시간보다 이전인 모든 데이터를 삭제한다
     void deleteAllByExpirationDateTimeBefore(LocalDateTime dateTime);
 }
-
